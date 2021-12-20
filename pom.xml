@@ -15,8 +15,14 @@
 	<description>Application that turns a RabbitMQ request from a TaskDto to a CoreValidRequest</description>
 	<properties>
 		<java.version>11</java.version>
+		<gridcapa.core.valid.version>0.0.1-SNAPSHOT</gridcapa.core.valid.version>
 	</properties>
 	<dependencies>
+		<dependency>
+			<groupId>com.farao-community.farao</groupId>
+			<artifactId>gridcapa-core-valid-spring-boot-starter</artifactId>
+			<version>${gridcapa.core.valid.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
