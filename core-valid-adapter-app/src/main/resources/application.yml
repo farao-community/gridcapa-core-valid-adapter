@@ -6,12 +6,11 @@ spring:
     port: 5672
   cloud:
     stream:
-      default:
-        binder: rabbit
-        group: core-valid
       bindings:
         handleRun-in-0:
-          destination: run-task
+          binder: rabbit
+          destination: core-valid-run-task
+          group: core-valid
       rabbit:
         default:
           consumer:
@@ -21,3 +20,6 @@ spring:
 core-valid-runner:
   amqp:
     queue-name: core-valid-requests
+
+server:
+  port: ${CORE_VALID_ADAPTER_SERVER_PORT:8080}
