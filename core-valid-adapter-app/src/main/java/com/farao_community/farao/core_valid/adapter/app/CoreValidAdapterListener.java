@@ -10,6 +10,7 @@ import com.farao_community.farao.core_valid.api.resource.CoreValidFileResource;
 import com.farao_community.farao.core_valid.api.resource.CoreValidRequest;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
+import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_valid.starter.CoreValidClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,13 +37,23 @@ public class CoreValidAdapterListener {
     @Bean
     public Consumer<TaskDto> handleRun() {
         return taskDto -> {
-            LOGGER.info(String.format("Handling run request %s on TS ", taskDto.getTimestamp()));
-            CoreValidRequest request = getCoreValidRequest(taskDto);
-            coreValidClient.run(request);
+            try {
+                if (taskDto.getStatus() == TaskStatus.READY
+                        || taskDto.getStatus() == TaskStatus.SUCCESS
+                        || taskDto.getStatus() == TaskStatus.ERROR) {
+                    LOGGER.info(String.format("Handling run request on TS %s ", taskDto.getTimestamp()));
+                    CoreValidRequest request = getCoreValidRequest(taskDto);
+                    coreValidClient.run(request);
+                } else {
+                    LOGGER.warn("Failed to handle run request on timestamp {} because it is not ready yet", taskDto.getTimestamp());
+                }
+            } catch (Exception e) {
+                throw new CoreValidAdapterException(String.format("Error during handling run request %s on TS ", taskDto.getTimestamp()), e);
+            }
         };
     }
 
-    private CoreValidRequest getCoreValidRequest(TaskDto taskDto) {
+    CoreValidRequest getCoreValidRequest(TaskDto taskDto) {
         String id = taskDto.getId().toString();
         OffsetDateTime offsetDateTime = OffsetDateTime.parse(taskDto.getTimestamp().toString() + "Z"); //todo change task manager timestamp to OffsetDateTime
         List<ProcessFileDto> processFiles = taskDto.getProcessFiles();
