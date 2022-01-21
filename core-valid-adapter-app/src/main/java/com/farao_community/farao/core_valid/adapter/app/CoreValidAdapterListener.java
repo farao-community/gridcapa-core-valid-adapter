@@ -55,7 +55,7 @@ public class CoreValidAdapterListener {
 
     CoreValidRequest getCoreValidRequest(TaskDto taskDto) {
         String id = taskDto.getId().toString();
-        OffsetDateTime offsetDateTime = OffsetDateTime.parse(taskDto.getTimestamp().toString() + "Z"); //todo change task manager timestamp to OffsetDateTime
+        OffsetDateTime offsetDateTime = taskDto.getTimestamp();
         List<ProcessFileDto> processFiles = taskDto.getProcessFiles();
         CoreValidFileResource cgm = null;
         CoreValidFileResource cbcora = null;
