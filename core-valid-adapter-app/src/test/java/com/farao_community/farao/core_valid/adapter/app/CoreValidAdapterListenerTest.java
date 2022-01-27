@@ -8,14 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Ameni Walha {@literal <ameni.walha at rte-france.com>}
@@ -32,8 +31,7 @@ public class CoreValidAdapterListenerTest {
     @Test
     void testGetCoreValidRequest() {
         UUID id = UUID.randomUUID();
-        LocalDateTime dateTime = LocalDateTime.parse("2021-12-07T14:30");
-        OffsetDateTime timestamp = OffsetDateTime.of(dateTime, ZoneOffset.UTC);
+        OffsetDateTime timestamp = OffsetDateTime.parse("2021-12-07T14:30Z");
         List<ProcessFileDto> processFiles = new ArrayList<>();
         processFiles.add(new ProcessFileDto("CGM", ProcessFileStatus.VALIDATED, "cgm", timestamp, "file://cgm.uct"));
         processFiles.add(new ProcessFileDto("CBCORA", ProcessFileStatus.VALIDATED, "cbcora", timestamp, "file://cbcora.xml"));
@@ -52,8 +50,7 @@ public class CoreValidAdapterListenerTest {
     @Test
     void testGetCoreValidRequestWithIncorrectFiles() {
         UUID id = UUID.randomUUID();
-        LocalDateTime dateTime = LocalDateTime.parse("2021-12-07T14:30");
-        OffsetDateTime timestamp = OffsetDateTime.of(dateTime, ZoneOffset.UTC);
+        OffsetDateTime timestamp = OffsetDateTime.parse("2021-12-07T14:30Z");
         List<ProcessFileDto> processFiles = new ArrayList<>();
         processFiles.add(new ProcessFileDto("CGM", ProcessFileStatus.VALIDATED, "cgm", timestamp, "file://cgm.uct"));
         processFiles.add(new ProcessFileDto("CBCORA", ProcessFileStatus.VALIDATED, "cbcora", timestamp, "file://cbcora.xml"));
