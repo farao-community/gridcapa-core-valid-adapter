@@ -40,7 +40,7 @@ public class CoreValidAdapterListenerTest {
         processFiles.add(new ProcessFileDto("REFPROG", ProcessFileStatus.VALIDATED, "refprog", timestamp, "file://refprog.xml"));
         List<ProcessEventDto> processEvents = new ArrayList<>();
         TaskDto taskDto = new TaskDto(id, timestamp, TaskStatus.READY, processFiles, processEvents);
-        CoreValidRequest coreValidRequest = coreValidAdapterListener.getCoreValidRequest(taskDto);
+        CoreValidRequest coreValidRequest = coreValidAdapterListener.getManualCoreValidRequest(taskDto);
         assertEquals(id.toString(), coreValidRequest.getId());
         assertEquals("cgm", coreValidRequest.getCgm().getFilename());
         assertEquals("file://cgm.uct", coreValidRequest.getCgm().getUrl());
@@ -59,7 +59,7 @@ public class CoreValidAdapterListenerTest {
         processFiles.add(new ProcessFileDto("REF-PROG", ProcessFileStatus.VALIDATED, "refprog", timestamp, "file://refprog.xml"));
         List<ProcessEventDto> processEvents = new ArrayList<>();
         TaskDto taskDto = new TaskDto(id, timestamp, TaskStatus.READY, processFiles, processEvents);
-        assertThrows(IllegalStateException.class, () -> coreValidAdapterListener.getCoreValidRequest(taskDto));
+        assertThrows(IllegalStateException.class, () -> coreValidAdapterListener.getManualCoreValidRequest(taskDto));
 
     }
 }

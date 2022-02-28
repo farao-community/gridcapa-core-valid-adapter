@@ -35,25 +35,64 @@ public class CoreValidAdapterListener {
     }
 
     @Bean
-    public Consumer<TaskDto> handleRun() {
-        return taskDto -> {
-            try {
-                if (taskDto.getStatus() == TaskStatus.READY
-                        || taskDto.getStatus() == TaskStatus.SUCCESS
-                        || taskDto.getStatus() == TaskStatus.ERROR) {
-                    LOGGER.info(String.format("Handling run request on TS %s ", taskDto.getTimestamp()));
-                    CoreValidRequest request = getCoreValidRequest(taskDto);
-                    coreValidClient.run(request);
-                } else {
-                    LOGGER.warn("Failed to handle run request on timestamp {} because it is not ready yet", taskDto.getTimestamp());
-                }
-            } catch (Exception e) {
-                throw new CoreValidAdapterException(String.format("Error during handling run request %s on TS ", taskDto.getTimestamp()), e);
-            }
-        };
+    public Consumer<TaskDto> consumeTask() {
+        return this::handleManualTask;
     }
 
-    CoreValidRequest getCoreValidRequest(TaskDto taskDto) {
+    @Bean
+    public Consumer<TaskDto> consumeAutoTask() {
+        return this::handleAutoTask;
+    }
+
+    private void handleAutoTask(TaskDto taskDto) {
+        try {
+            if (taskDto.getStatus() == TaskStatus.READY
+                    || taskDto.getStatus() == TaskStatus.SUCCESS
+                    || taskDto.getStatus() == TaskStatus.ERROR) {
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info(String.format("Handling automatic run request on TS %s ", taskDto.getTimestamp()));
+                }
+                CoreValidRequest request = getAutomaticCoreValidRequest(taskDto);
+                coreValidClient.run(request);
+            } else {
+                LOGGER.warn("Failed to handle automatic run request on timestamp {} because it is not ready yet", taskDto.getTimestamp());
+            }
+        } catch (Exception e) {
+            throw new CoreValidAdapterException(String.format("Error during handling automatic run request %s on TS ", taskDto.getTimestamp()), e);
+        }
+    }
+
+    private void handleManualTask(TaskDto taskDto) {
+        try {
+            if (taskDto.getStatus() == TaskStatus.READY
+                    || taskDto.getStatus() == TaskStatus.SUCCESS
+                    || taskDto.getStatus() == TaskStatus.ERROR) {
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info(String.format("Handling manual run request on TS %s ", taskDto.getTimestamp()));
+                }
+                CoreValidRequest request = getManualCoreValidRequest(taskDto);
+                coreValidClient.run(request);
+            } else {
+                LOGGER.warn("Failed to handle manual run request on timestamp {} because it is not ready yet", taskDto.getTimestamp());
+            }
+        } catch (Exception e) {
+            throw new CoreValidAdapterException(String.format("Error during handling manual run request %s on TS ", taskDto.getTimestamp()), e);
+        }
+
+    }
+
+    CoreValidRequest getManualCoreValidRequest(TaskDto taskDto) {
+        return getCoreValidRequestBuilder(taskDto)
+                .build();
+    }
+
+    CoreValidRequest getAutomaticCoreValidRequest(TaskDto taskDto) {
+        return getCoreValidRequestBuilder(taskDto)
+                .isLaunchedAutomatically()
+                .build();
+    }
+
+    CoreValidRequest.CoreValidRequestBuilder getCoreValidRequestBuilder(TaskDto taskDto) {
         String id = taskDto.getId().toString();
         OffsetDateTime offsetDateTime = taskDto.getTimestamp();
         List<ProcessFileDto> processFiles = taskDto.getProcessFiles();
@@ -84,7 +123,7 @@ public class CoreValidAdapterListener {
                     throw new IllegalStateException("Unexpected value: " + processFileDto.getFileType());
             }
         }
-        return new CoreValidRequest(
+        return new CoreValidRequest.CoreValidRequestBuilder(
                 id,
                 offsetDateTime,
                 cgm,
@@ -93,5 +132,6 @@ public class CoreValidAdapterListener {
                 refprog,
                 studyPoints
         );
+
     }
 }
