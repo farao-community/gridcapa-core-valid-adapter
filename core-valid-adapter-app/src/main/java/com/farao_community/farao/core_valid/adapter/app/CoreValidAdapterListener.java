@@ -49,9 +49,7 @@ public class CoreValidAdapterListener {
             if (taskDto.getStatus() == TaskStatus.READY
                     || taskDto.getStatus() == TaskStatus.SUCCESS
                     || taskDto.getStatus() == TaskStatus.ERROR) {
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Handling automatic run request on TS %s ", taskDto.getTimestamp()));
-                }
+                LOGGER.info("Handling automatic run request on TS {} ", taskDto.getTimestamp());
                 CoreValidRequest request = getAutomaticCoreValidRequest(taskDto);
                 coreValidClient.run(request);
             } else {
@@ -67,9 +65,7 @@ public class CoreValidAdapterListener {
             if (taskDto.getStatus() == TaskStatus.READY
                     || taskDto.getStatus() == TaskStatus.SUCCESS
                     || taskDto.getStatus() == TaskStatus.ERROR) {
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Handling manual run request on TS %s ", taskDto.getTimestamp()));
-                }
+                LOGGER.info("Handling manual run request on TS {} ", taskDto.getTimestamp());
                 CoreValidRequest request = getManualCoreValidRequest(taskDto);
                 coreValidClient.run(request);
             } else {
@@ -82,17 +78,14 @@ public class CoreValidAdapterListener {
     }
 
     CoreValidRequest getManualCoreValidRequest(TaskDto taskDto) {
-        return getCoreValidRequestBuilder(taskDto)
-                .build();
+        return getCoreValidRequest(taskDto, false);
     }
 
     CoreValidRequest getAutomaticCoreValidRequest(TaskDto taskDto) {
-        return getCoreValidRequestBuilder(taskDto)
-                .isLaunchedAutomatically()
-                .build();
+        return getCoreValidRequest(taskDto, true);
     }
 
-    CoreValidRequest.CoreValidRequestBuilder getCoreValidRequestBuilder(TaskDto taskDto) {
+    CoreValidRequest getCoreValidRequest(TaskDto taskDto, boolean isLaunchedAutomatically) {
         String id = taskDto.getId().toString();
         OffsetDateTime offsetDateTime = taskDto.getTimestamp();
         List<ProcessFileDto> processFiles = taskDto.getProcessFiles();
@@ -123,14 +116,15 @@ public class CoreValidAdapterListener {
                     throw new IllegalStateException("Unexpected value: " + processFileDto.getFileType());
             }
         }
-        return new CoreValidRequest.CoreValidRequestBuilder(
+        return new CoreValidRequest(
                 id,
                 offsetDateTime,
                 cgm,
                 cbcora,
                 glsk,
                 refprog,
-                studyPoints
+                studyPoints,
+                isLaunchedAutomatically
         );
 
     }
