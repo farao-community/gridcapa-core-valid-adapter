@@ -40,7 +40,7 @@
 		<maven.compiler.target>11</maven.compiler.target>
 		<spring-cloud.version>Hoxton.SR12</spring-cloud.version>
 		<task-manager.version>0.3.0</task-manager.version>
-		<core-valid-runner.version>0.4.0-SNAPSHOT</core-valid-runner.version>
+		<core-valid-runner.version>0.4.0</core-valid-runner.version>
 	</properties>
 
 	<dependencyManagement>
