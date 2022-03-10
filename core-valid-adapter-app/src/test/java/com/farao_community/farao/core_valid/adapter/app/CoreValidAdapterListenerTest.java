@@ -17,6 +17,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -96,7 +97,7 @@ class CoreValidAdapterListenerTest {
     void testGetAutomaticCoreValidRequest() {
         TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.READY);
         CoreValidRequest coreValidRequest = coreValidAdapterListener.getAutomaticCoreValidRequest(taskDto);
-        assert coreValidRequest.getLaunchedAutomatically();
+        assertTrue(coreValidRequest.getLaunchedAutomatically());
     }
 
     @Test
@@ -188,6 +189,15 @@ class CoreValidAdapterListenerTest {
     void consumeAutoTaskThrowingError() {
         Mockito.when(coreValidClient.run(Mockito.any())).thenThrow(new CoreValidInternalException("message"));
         TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.ERROR);
-        assertThrows(CoreValidAdapterException.class, () -> coreValidAdapterListener.consumeTask().accept(taskDto));
+        Consumer<TaskDto> taskDtoConsumer = coreValidAdapterListener.consumeAutoTask();
+        assertThrows(CoreValidAdapterException.class, () -> taskDtoConsumer.accept(taskDto));
+    }
+
+    @Test
+    void consumeTaskThrowingError() {
+        Mockito.when(coreValidClient.run(Mockito.any())).thenThrow(new CoreValidInternalException("message"));
+        TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.ERROR);
+        Consumer<TaskDto> taskDtoConsumer = coreValidAdapterListener.consumeTask();
+        assertThrows(CoreValidAdapterException.class, () -> taskDtoConsumer.accept(taskDto));
     }
 }
