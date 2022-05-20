@@ -54,14 +54,14 @@ class CoreValidAdapterListenerTest {
     public TaskDto createTaskDtoWithStatus(TaskStatus status) {
         UUID id = UUID.randomUUID();
         OffsetDateTime timestamp = OffsetDateTime.parse("2021-12-07T14:30Z");
-        List<ProcessFileDto> processFiles = new ArrayList<>();
-        processFiles.add(new ProcessFileDto(cgmFileType, ProcessFileStatus.VALIDATED, cgmFileName, timestamp, cgmFileUrl));
-        processFiles.add(new ProcessFileDto(cbcoraFileType, ProcessFileStatus.VALIDATED, cbcoraFileName, timestamp, cbcoraFileUrl));
-        processFiles.add(new ProcessFileDto(glskFileType, ProcessFileStatus.VALIDATED, glskFileName, timestamp, glksFileUrl));
-        processFiles.add(new ProcessFileDto(studyPointsFileType, ProcessFileStatus.VALIDATED, studyPointsFileName, timestamp, studyPointsFileUrl));
-        processFiles.add(new ProcessFileDto(refprogFileType, ProcessFileStatus.VALIDATED, refprogFileName, timestamp, refprogFileUrl));
+        List<ProcessFileDto> inputsFiles = new ArrayList<>();
+        inputsFiles.add(new ProcessFileDto(cgmFileType, ProcessFileStatus.VALIDATED, cgmFileName, timestamp, cgmFileUrl));
+        inputsFiles.add(new ProcessFileDto(cbcoraFileType, ProcessFileStatus.VALIDATED, cbcoraFileName, timestamp, cbcoraFileUrl));
+        inputsFiles.add(new ProcessFileDto(glskFileType, ProcessFileStatus.VALIDATED, glskFileName, timestamp, glksFileUrl));
+        inputsFiles.add(new ProcessFileDto(studyPointsFileType, ProcessFileStatus.VALIDATED, studyPointsFileName, timestamp, studyPointsFileUrl));
+        inputsFiles.add(new ProcessFileDto(refprogFileType, ProcessFileStatus.VALIDATED, refprogFileName, timestamp, refprogFileUrl));
         List<ProcessEventDto> processEvents = new ArrayList<>();
-        return new TaskDto(id, timestamp, status, processFiles, processEvents);
+        return new TaskDto(id, timestamp, status, null, inputsFiles, null, processEvents);
     }
 
     @BeforeEach
@@ -105,14 +105,14 @@ class CoreValidAdapterListenerTest {
         String wrongRefprogFileType = "REF-PROG";
         UUID id = UUID.randomUUID();
         OffsetDateTime timestamp = OffsetDateTime.parse("2021-12-07T14:30Z");
-        List<ProcessFileDto> processFiles = new ArrayList<>();
-        processFiles.add(new ProcessFileDto(cgmFileType, ProcessFileStatus.VALIDATED, cgmFileName, timestamp, cgmFileUrl));
-        processFiles.add(new ProcessFileDto(cbcoraFileType, ProcessFileStatus.VALIDATED, cbcoraFileName, timestamp, cbcoraFileUrl));
-        processFiles.add(new ProcessFileDto(glskFileType, ProcessFileStatus.VALIDATED, glskFileName, timestamp, glksFileUrl));
-        processFiles.add(new ProcessFileDto(studyPointsFileType, ProcessFileStatus.VALIDATED, studyPointsFileName, timestamp, studyPointsFileUrl));
-        processFiles.add(new ProcessFileDto(wrongRefprogFileType, ProcessFileStatus.VALIDATED, refprogFileName, timestamp, refprogFileUrl));
+        List<ProcessFileDto> inputsFiles = new ArrayList<>();
+        inputsFiles.add(new ProcessFileDto(cgmFileType, ProcessFileStatus.VALIDATED, cgmFileName, timestamp, cgmFileUrl));
+        inputsFiles.add(new ProcessFileDto(cbcoraFileType, ProcessFileStatus.VALIDATED, cbcoraFileName, timestamp, cbcoraFileUrl));
+        inputsFiles.add(new ProcessFileDto(glskFileType, ProcessFileStatus.VALIDATED, glskFileName, timestamp, glksFileUrl));
+        inputsFiles.add(new ProcessFileDto(studyPointsFileType, ProcessFileStatus.VALIDATED, studyPointsFileName, timestamp, studyPointsFileUrl));
+        inputsFiles.add(new ProcessFileDto(wrongRefprogFileType, ProcessFileStatus.VALIDATED, refprogFileName, timestamp, refprogFileUrl));
         List<ProcessEventDto> processEvents = new ArrayList<>();
-        TaskDto taskDto = new TaskDto(id, timestamp, TaskStatus.READY, processFiles, processEvents);
+        TaskDto taskDto = new TaskDto(id, timestamp, TaskStatus.READY, null, inputsFiles, null, processEvents);
         assertThrows(IllegalStateException.class, () -> coreValidAdapterListener.getManualCoreValidRequest(taskDto));
 
     }
