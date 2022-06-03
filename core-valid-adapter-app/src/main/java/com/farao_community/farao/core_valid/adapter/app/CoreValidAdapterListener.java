@@ -88,32 +88,32 @@ public class CoreValidAdapterListener {
     CoreValidRequest getCoreValidRequest(TaskDto taskDto, boolean isLaunchedAutomatically) {
         String id = taskDto.getId().toString();
         OffsetDateTime offsetDateTime = taskDto.getTimestamp();
-        List<ProcessFileDto> inputsFiles = taskDto.getInputs();
+        List<ProcessFileDto> processFiles = taskDto.getInputs();
         CoreValidFileResource cgm = null;
         CoreValidFileResource cbcora = null;
         CoreValidFileResource glsk = null;
         CoreValidFileResource refprog = null;
         CoreValidFileResource studyPoints = null;
-        for (ProcessFileDto inputFileDto : inputsFiles) {
-            String fileType = inputFileDto.getFileType();
+        for (ProcessFileDto processFileDto : processFiles) {
+            String fileType = processFileDto.getFileType();
             switch (fileType) {
                 case "CGM":
-                    cgm = new CoreValidFileResource(inputFileDto.getFilename(), inputFileDto.getFileUrl());
+                    cgm = new CoreValidFileResource(processFileDto.getFilename(), processFileDto.getFileUrl());
                     break;
                 case "CBCORA":
-                    cbcora = new CoreValidFileResource(inputFileDto.getFilename(), inputFileDto.getFileUrl());
+                    cbcora = new CoreValidFileResource(processFileDto.getFilename(), processFileDto.getFileUrl());
                     break;
                 case "GLSK":
-                    glsk = new CoreValidFileResource(inputFileDto.getFilename(), inputFileDto.getFileUrl());
+                    glsk = new CoreValidFileResource(processFileDto.getFilename(), processFileDto.getFileUrl());
                     break;
                 case "REFPROG":
-                    refprog = new CoreValidFileResource(inputFileDto.getFilename(), inputFileDto.getFileUrl());
+                    refprog = new CoreValidFileResource(processFileDto.getFilename(), processFileDto.getFileUrl());
                     break;
                 case "STUDY-POINTS":
-                    studyPoints = new CoreValidFileResource(inputFileDto.getFilename(), inputFileDto.getFileUrl());
+                    studyPoints = new CoreValidFileResource(processFileDto.getFilename(), processFileDto.getFileUrl());
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected value: " + inputFileDto.getFileType());
+                    throw new IllegalStateException("Unexpected value: " + processFileDto.getFileType());
             }
         }
         return new CoreValidRequest(
