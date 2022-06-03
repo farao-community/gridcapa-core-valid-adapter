@@ -1,8 +1,8 @@
 package com.farao_community.farao.core_valid.adapter.app;
 
+import com.farao_community.farao.core_valid.api.exception.CoreValidInternalException;
+import com.farao_community.farao.core_valid.api.resource.CoreValidRequest;
 import com.farao_community.farao.gridcapa.task_manager.api.*;
-import com.farao_community.farao.gridcapa_core_valid.api.exception.CoreValidInternalException;
-import com.farao_community.farao.gridcapa_core_valid.api.resource.CoreValidRequest;
 import com.farao_community.farao.gridcapa_core_valid.starter.CoreValidClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
