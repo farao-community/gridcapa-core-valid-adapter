@@ -1,9 +1,6 @@
 package com.farao_community.farao.core_valid.adapter.app;
 
-import com.farao_community.farao.core_valid.api.exception.CoreValidInternalException;
-import com.farao_community.farao.core_valid.api.resource.CoreValidRequest;
 import com.farao_community.farao.gridcapa.task_manager.api.*;
-import com.farao_community.farao.gridcapa_core_valid.starter.CoreValidClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -19,7 +16,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Ameni Walha {@literal <ameni.walha at rte-france.com>}
@@ -61,7 +58,7 @@ class CoreValidAdapterListenerTest {
         processFiles.add(new ProcessFileDto(studyPointsFileType, ProcessFileStatus.VALIDATED, studyPointsFileName, timestamp, studyPointsFileUrl));
         processFiles.add(new ProcessFileDto(refprogFileType, ProcessFileStatus.VALIDATED, refprogFileName, timestamp, refprogFileUrl));
         List<ProcessEventDto> processEvents = new ArrayList<>();
-        return new TaskDto(id, timestamp, status, processFiles, processEvents);
+        return new TaskDto(id, timestamp, status, processFiles, null, null, processEvents);
     }
 
     @BeforeEach
@@ -112,7 +109,7 @@ class CoreValidAdapterListenerTest {
         processFiles.add(new ProcessFileDto(studyPointsFileType, ProcessFileStatus.VALIDATED, studyPointsFileName, timestamp, studyPointsFileUrl));
         processFiles.add(new ProcessFileDto(wrongRefprogFileType, ProcessFileStatus.VALIDATED, refprogFileName, timestamp, refprogFileUrl));
         List<ProcessEventDto> processEvents = new ArrayList<>();
-        TaskDto taskDto = new TaskDto(id, timestamp, TaskStatus.READY, processFiles, processEvents);
+        TaskDto taskDto = new TaskDto(id, timestamp, TaskStatus.READY, processFiles, null, null, processEvents);
         assertThrows(IllegalStateException.class, () -> coreValidAdapterListener.getManualCoreValidRequest(taskDto));
 
     }
