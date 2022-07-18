@@ -36,7 +36,7 @@
 	</build>
 
 	<properties>
-		<task-manager.version>1.2.0</task-manager.version>
+		<task-manager.version>1.4.1</task-manager.version>
 		<core-valid-runner.version>1.1.0</core-valid-runner.version>
 	</properties>
 
