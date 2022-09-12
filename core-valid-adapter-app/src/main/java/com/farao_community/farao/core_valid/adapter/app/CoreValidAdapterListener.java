@@ -11,6 +11,7 @@ import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_valid.api.resource.CoreValidFileResource;
 import com.farao_community.farao.gridcapa_core_valid.api.resource.CoreValidRequest;
+import com.farao_community.farao.gridcapa_core_valid.api.resource.CoreValidResponse;
 import com.farao_community.farao.gridcapa_core_valid.starter.CoreValidClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
@@ -51,7 +53,7 @@ public class CoreValidAdapterListener {
                     || taskDto.getStatus() == TaskStatus.ERROR) {
                 LOGGER.info("Handling automatic run request on TS {} ", taskDto.getTimestamp());
                 CoreValidRequest request = getAutomaticCoreValidRequest(taskDto);
-                coreValidClient.run(request);
+                CompletableFuture.runAsync(() -> coreValidClient.run(request, CoreValidRequest.class, CoreValidResponse.class));
             } else {
                 LOGGER.warn("Failed to handle automatic run request on timestamp {} because it is not ready yet", taskDto.getTimestamp());
             }
@@ -67,7 +69,7 @@ public class CoreValidAdapterListener {
                     || taskDto.getStatus() == TaskStatus.ERROR) {
                 LOGGER.info("Handling manual run request on TS {} ", taskDto.getTimestamp());
                 CoreValidRequest request = getManualCoreValidRequest(taskDto);
-                coreValidClient.run(request);
+                CompletableFuture.runAsync(() -> coreValidClient.run(request, CoreValidRequest.class, CoreValidResponse.class));
             } else {
                 LOGGER.warn("Failed to handle manual run request on timestamp {} because it is not ready yet", taskDto.getTimestamp());
             }
