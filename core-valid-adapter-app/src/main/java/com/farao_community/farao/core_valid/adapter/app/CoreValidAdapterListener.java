@@ -6,11 +6,11 @@
  */
 package com.farao_community.farao.core_valid.adapter.app;
 
-import com.farao_community.farao.core_valid.api.resource.CoreValidFileResource;
-import com.farao_community.farao.core_valid.api.resource.CoreValidRequest;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
+import com.farao_community.farao.gridcapa_core_valid.api.resource.CoreValidFileResource;
+import com.farao_community.farao.gridcapa_core_valid.api.resource.CoreValidRequest;
 import com.farao_community.farao.gridcapa_core_valid.starter.CoreValidClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
