@@ -11,7 +11,7 @@
 	</parent>
 
 	<artifactId>gridcapa-core-valid-adapter</artifactId>
-	<version>1.2.0-SNAPSHOT</version>
+	<version>1.1.3-SNAPSHOT</version>
 	<name>gridcapa-core-valid-adapter</name>
 	<description>Application that turns a RabbitMQ request from a TaskDto to a CoreValidRequest</description>
 	<packaging>pom</packaging>
