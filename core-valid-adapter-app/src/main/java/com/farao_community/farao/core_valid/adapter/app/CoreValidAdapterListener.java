@@ -12,6 +12,7 @@ import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_valid.api.resource.CoreValidFileResource;
 import com.farao_community.farao.gridcapa_core_valid.api.resource.CoreValidRequest;
 import com.farao_community.farao.gridcapa_core_valid.starter.CoreValidClient;
+import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -29,9 +30,11 @@ public class CoreValidAdapterListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CoreValidAdapterListener.class);
     private final CoreValidClient coreValidClient;
+    private final MinioAdapter minioAdapter;
 
-    public CoreValidAdapterListener(CoreValidClient coreValidClient) {
+    public CoreValidAdapterListener(CoreValidClient coreValidClient, MinioAdapter minioAdapter) {
         this.coreValidClient = coreValidClient;
+        this.minioAdapter = minioAdapter;
     }
 
     @Bean
@@ -96,21 +99,22 @@ public class CoreValidAdapterListener {
         CoreValidFileResource studyPoints = null;
         for (ProcessFileDto processFileDto : processFiles) {
             String fileType = processFileDto.getFileType();
+            String fileUrl = minioAdapter.generatePreSignedUrlFromFullMinioPath(processFileDto.getFilePath(), 1);
             switch (fileType) {
                 case "CGM":
-                    cgm = new CoreValidFileResource(processFileDto.getFilename(), processFileDto.getFileUrl());
+                    cgm = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
                     break;
                 case "CBCORA":
-                    cbcora = new CoreValidFileResource(processFileDto.getFilename(), processFileDto.getFileUrl());
+                    cbcora = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
                     break;
                 case "GLSK":
-                    glsk = new CoreValidFileResource(processFileDto.getFilename(), processFileDto.getFileUrl());
+                    glsk = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
                     break;
                 case "REFPROG":
-                    refprog = new CoreValidFileResource(processFileDto.getFilename(), processFileDto.getFileUrl());
+                    refprog = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
                     break;
                 case "STUDY-POINTS":
-                    studyPoints = new CoreValidFileResource(processFileDto.getFilename(), processFileDto.getFileUrl());
+                    studyPoints = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
                     break;
                 default:
                     throw new IllegalStateException("Unexpected value: " + processFileDto.getFileType());
@@ -126,6 +130,5 @@ public class CoreValidAdapterListener {
                 studyPoints,
                 isLaunchedAutomatically
         );
-
     }
 }

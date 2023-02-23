@@ -6,10 +6,15 @@
  */
 package com.farao_community.farao.core_valid.adapter.app;
 
-import com.farao_community.farao.gridcapa.task_manager.api.*;
+import com.farao_community.farao.gridcapa.task_manager.api.ProcessEventDto;
+import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
+import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
+import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
+import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_valid.api.exception.CoreValidInternalException;
 import com.farao_community.farao.gridcapa_core_valid.api.resource.CoreValidRequest;
 import com.farao_community.farao.gridcapa_core_valid.starter.CoreValidClient;
+import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +40,9 @@ class CoreValidAdapterListenerTest {
     @MockBean
     private CoreValidClient coreValidClient;
 
+    @MockBean
+    private MinioAdapter minioAdapter;
+
     @Captor
     ArgumentCaptor<CoreValidRequest> argumentCaptor;
 
@@ -52,19 +60,24 @@ class CoreValidAdapterListenerTest {
     private String refprogFileName;
     private String cgmFileUrl;
     private String cbcoraFileUrl;
-    private String glksFileUrl;
+    private String glskFileUrl;
     private String studyPointsFileUrl;
     private String refprogFileUrl;
+    private String cgmFilePath;
+    private String cbcoraFilePath;
+    private String glskFilePath;
+    private String studyPointsFilePath;
+    private String refprogFilePath;
 
     public TaskDto createTaskDtoWithStatus(TaskStatus status) {
         UUID id = UUID.randomUUID();
         OffsetDateTime timestamp = OffsetDateTime.parse("2021-12-07T14:30Z");
         List<ProcessFileDto> processFiles = new ArrayList<>();
-        processFiles.add(new ProcessFileDto(cgmFileType, ProcessFileStatus.VALIDATED, cgmFileName, timestamp, cgmFileUrl));
-        processFiles.add(new ProcessFileDto(cbcoraFileType, ProcessFileStatus.VALIDATED, cbcoraFileName, timestamp, cbcoraFileUrl));
-        processFiles.add(new ProcessFileDto(glskFileType, ProcessFileStatus.VALIDATED, glskFileName, timestamp, glksFileUrl));
-        processFiles.add(new ProcessFileDto(studyPointsFileType, ProcessFileStatus.VALIDATED, studyPointsFileName, timestamp, studyPointsFileUrl));
-        processFiles.add(new ProcessFileDto(refprogFileType, ProcessFileStatus.VALIDATED, refprogFileName, timestamp, refprogFileUrl));
+        processFiles.add(new ProcessFileDto(cgmFilePath, cgmFileType, ProcessFileStatus.VALIDATED, cgmFileName, timestamp));
+        processFiles.add(new ProcessFileDto(cbcoraFilePath, cbcoraFileType, ProcessFileStatus.VALIDATED, cbcoraFileName, timestamp));
+        processFiles.add(new ProcessFileDto(glskFilePath, glskFileType, ProcessFileStatus.VALIDATED, glskFileName, timestamp));
+        processFiles.add(new ProcessFileDto(studyPointsFilePath, studyPointsFileType, ProcessFileStatus.VALIDATED, studyPointsFileName, timestamp));
+        processFiles.add(new ProcessFileDto(refprogFilePath, refprogFileType, ProcessFileStatus.VALIDATED, refprogFileName, timestamp));
         List<ProcessEventDto> processEvents = new ArrayList<>();
         return new TaskDto(id, timestamp, status, null, processFiles, null, processEvents);
     }
@@ -76,16 +89,30 @@ class CoreValidAdapterListenerTest {
         glskFileType = "GLSK";
         studyPointsFileType = "STUDY-POINTS";
         refprogFileType = "REFPROG";
+
         cgmFileName = "cgm";
         cbcoraFileName = "cbcora";
         glskFileName = "glsk";
         studyPointsFileName = "study points";
         refprogFileName = "refprog";
-        cgmFileUrl = "file://cgm.uct";
-        cbcoraFileUrl = "file://cbcora.xml";
-        glksFileUrl = "file://glsk.xml";
-        studyPointsFileUrl = "file://study_points.csv";
-        refprogFileUrl = "file://refprog.xml";
+
+        cgmFilePath = "/CGM";
+        cbcoraFilePath = "/CBCORA";
+        glskFilePath = "/GLSK";
+        studyPointsFilePath = "/STUDYPOINTS";
+        refprogFilePath = "/REFPROG";
+
+        cgmFileUrl = "file://CGM/cgm.uct";
+        cbcoraFileUrl = "file://CBCORA/cbcora.xml";
+        glskFileUrl = "file://GLSK/glsk.xml";
+        studyPointsFileUrl = "file://STUDYPOINTS/study_points.csv";
+        refprogFileUrl = "file://REFPROG/refprog.xml";
+
+        Mockito.when(minioAdapter.generatePreSignedUrlFromFullMinioPath(cgmFilePath, 1)).thenReturn(cgmFileUrl);
+        Mockito.when(minioAdapter.generatePreSignedUrlFromFullMinioPath(cbcoraFilePath, 1)).thenReturn(cbcoraFileUrl);
+        Mockito.when(minioAdapter.generatePreSignedUrlFromFullMinioPath(glskFilePath, 1)).thenReturn(glskFileUrl);
+        Mockito.when(minioAdapter.generatePreSignedUrlFromFullMinioPath(studyPointsFilePath, 1)).thenReturn(studyPointsFileUrl);
+        Mockito.when(minioAdapter.generatePreSignedUrlFromFullMinioPath(refprogFilePath, 1)).thenReturn(refprogFileUrl);
     }
 
     @Test
@@ -111,11 +138,11 @@ class CoreValidAdapterListenerTest {
         UUID id = UUID.randomUUID();
         OffsetDateTime timestamp = OffsetDateTime.parse("2021-12-07T14:30Z");
         List<ProcessFileDto> processFiles = new ArrayList<>();
-        processFiles.add(new ProcessFileDto(cgmFileType, ProcessFileStatus.VALIDATED, cgmFileName, timestamp, cgmFileUrl));
-        processFiles.add(new ProcessFileDto(cbcoraFileType, ProcessFileStatus.VALIDATED, cbcoraFileName, timestamp, cbcoraFileUrl));
-        processFiles.add(new ProcessFileDto(glskFileType, ProcessFileStatus.VALIDATED, glskFileName, timestamp, glksFileUrl));
-        processFiles.add(new ProcessFileDto(studyPointsFileType, ProcessFileStatus.VALIDATED, studyPointsFileName, timestamp, studyPointsFileUrl));
-        processFiles.add(new ProcessFileDto(wrongRefprogFileType, ProcessFileStatus.VALIDATED, refprogFileName, timestamp, refprogFileUrl));
+        processFiles.add(new ProcessFileDto(cgmFilePath, cgmFileType, ProcessFileStatus.VALIDATED, cgmFileName, timestamp));
+        processFiles.add(new ProcessFileDto(cbcoraFilePath, cbcoraFileType, ProcessFileStatus.VALIDATED, cbcoraFileName, timestamp));
+        processFiles.add(new ProcessFileDto(glskFilePath, glskFileType, ProcessFileStatus.VALIDATED, glskFileName, timestamp));
+        processFiles.add(new ProcessFileDto(studyPointsFilePath, studyPointsFileType, ProcessFileStatus.VALIDATED, studyPointsFileName, timestamp));
+        processFiles.add(new ProcessFileDto(refprogFilePath, wrongRefprogFileType, ProcessFileStatus.VALIDATED, refprogFileName, timestamp));
         List<ProcessEventDto> processEvents = new ArrayList<>();
         TaskDto taskDto = new TaskDto(id, timestamp, TaskStatus.READY, null, processFiles, null, processEvents);
         Assertions.assertThrows(IllegalStateException.class, () -> coreValidAdapterListener.getManualCoreValidRequest(taskDto));
