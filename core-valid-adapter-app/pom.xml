@@ -25,6 +25,7 @@
     </build>
 
     <dependencies>
+        <!-- COMPILE DEPENDENCIES -->
         <dependency>
             <groupId>com.farao-community.farao</groupId>
             <artifactId>gridcapa-starter-minio-adapter</artifactId>
@@ -53,6 +54,8 @@
             <groupId>com.farao-community.farao</groupId>
             <artifactId>gridcapa-core-valid-api</artifactId>
         </dependency>
+
+        <!-- TEST DEPENDENCIES -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
