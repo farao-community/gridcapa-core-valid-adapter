@@ -5,12 +5,12 @@
     <parent>
         <artifactId>gridcapa-core-valid-adapter</artifactId>
         <groupId>com.farao-community.farao</groupId>
-        <version>1.7.0-SNAPSHOT</version>
+        <version>1.7.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>core-valid-adapter-app</artifactId>
-    <version>1.7.0-SNAPSHOT</version>
+    <version>1.7.0</version>
     <name>Gridcapa Core Valid adapter application</name>
     <description>Application that turns a RabbitMQ request from a TaskDto to a CoreValidRequest</description>
     <url>http://www.farao-community.com</url>
