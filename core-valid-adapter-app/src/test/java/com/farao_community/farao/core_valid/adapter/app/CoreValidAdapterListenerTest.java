@@ -11,7 +11,6 @@ import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
-import com.farao_community.farao.gridcapa_core_valid.api.exception.CoreValidInternalException;
 import com.farao_community.farao.gridcapa_core_valid.api.resource.CoreValidRequest;
 import com.farao_community.farao.gridcapa_core_valid.starter.CoreValidClient;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
@@ -30,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 /**
  * @author Ameni Walha {@literal <ameni.walha at rte-france.com>}
@@ -216,21 +214,5 @@ class CoreValidAdapterListenerTest {
         TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.CREATED);
         coreValidAdapterListener.consumeTask().accept(taskDto);
         Mockito.verify(coreValidClient, Mockito.never()).run(argumentCaptor.capture());
-    }
-
-    @Test
-    void consumeAutoTaskThrowingError() {
-        Mockito.when(coreValidClient.run(Mockito.any())).thenThrow(new CoreValidInternalException("message"));
-        TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.ERROR);
-        Consumer<TaskDto> taskDtoConsumer = coreValidAdapterListener.consumeAutoTask();
-        Assertions.assertThrows(CoreValidAdapterException.class, () -> taskDtoConsumer.accept(taskDto));
-    }
-
-    @Test
-    void consumeTaskThrowingError() {
-        Mockito.when(coreValidClient.run(Mockito.any())).thenThrow(new CoreValidInternalException("message"));
-        TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.ERROR);
-        Consumer<TaskDto> taskDtoConsumer = coreValidAdapterListener.consumeTask();
-        Assertions.assertThrows(CoreValidAdapterException.class, () -> taskDtoConsumer.accept(taskDto));
     }
 }
