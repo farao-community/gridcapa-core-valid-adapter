@@ -9,4 +9,7 @@ public class CoreValidAdapterException extends RuntimeException {
         super(message, throwable);
     }
 
+    public CoreValidAdapterException(String message) {
+        super(message);
+    }
 }

@@ -7,6 +7,7 @@
 package com.farao_community.farao.core_valid.adapter.app;
 
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
+import com.farao_community.farao.gridcapa.task_manager.api.ProcessRunDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_valid.api.resource.CoreValidFileResource;
@@ -122,6 +123,7 @@ public class CoreValidAdapterListener {
         }
         return new CoreValidRequest(
                 id,
+                getCurrentRunId(taskDto),
                 offsetDateTime,
                 cgm,
                 cbcora,
@@ -130,5 +132,15 @@ public class CoreValidAdapterListener {
                 studyPoints,
                 isLaunchedAutomatically
         );
+    }
+
+    private String getCurrentRunId(TaskDto taskDto) {
+        List<ProcessRunDto> runHistory = taskDto.getRunHistory();
+        if (runHistory == null || runHistory.isEmpty()) {
+            LOGGER.warn("Failed to handle manual run request on timestamp {} because it has no run history", taskDto.getTimestamp());
+            throw new CoreValidAdapterException("Failed to handle manual run request on timestamp because it has no run history");
+        }
+        runHistory.sort((o1, o2) -> o2.getExecutionDate().compareTo(o1.getExecutionDate()));
+        return runHistory.get(0).getId().toString();
     }
 }
