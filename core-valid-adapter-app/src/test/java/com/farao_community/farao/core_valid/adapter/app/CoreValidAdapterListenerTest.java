@@ -9,6 +9,7 @@ package com.farao_community.farao.core_valid.adapter.app;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessEventDto;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
+import com.farao_community.farao.gridcapa.task_manager.api.ProcessRunDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_valid.api.resource.CoreValidRequest;
@@ -17,6 +18,8 @@ import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mockito;
@@ -29,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  * @author Ameni Walha {@literal <ameni.walha at rte-france.com>}
@@ -68,17 +72,19 @@ class CoreValidAdapterListenerTest {
     private String studyPointsFilePath;
     private String refprogFilePath;
 
-    public TaskDto createTaskDtoWithStatus(TaskStatus status) {
-        UUID id = UUID.randomUUID();
-        OffsetDateTime timestamp = OffsetDateTime.parse("2021-12-07T14:30Z");
-        List<ProcessFileDto> processFiles = new ArrayList<>();
-        processFiles.add(new ProcessFileDto(cgmFilePath, cgmFileType, ProcessFileStatus.VALIDATED, cgmFileName, timestamp));
-        processFiles.add(new ProcessFileDto(cbcoraFilePath, cbcoraFileType, ProcessFileStatus.VALIDATED, cbcoraFileName, timestamp));
-        processFiles.add(new ProcessFileDto(glskFilePath, glskFileType, ProcessFileStatus.VALIDATED, glskFileName, timestamp));
-        processFiles.add(new ProcessFileDto(studyPointsFilePath, studyPointsFileType, ProcessFileStatus.VALIDATED, studyPointsFileName, timestamp));
-        processFiles.add(new ProcessFileDto(refprogFilePath, refprogFileType, ProcessFileStatus.VALIDATED, refprogFileName, timestamp));
-        List<ProcessEventDto> processEvents = new ArrayList<>();
-        return new TaskDto(id, timestamp, status, processFiles, null, Collections.emptyList(), processEvents, Collections.emptyList(), Collections.emptyList());
+    public TaskDto createTaskDtoWithStatus(final TaskStatus status) {
+        final UUID id = UUID.randomUUID();
+        final OffsetDateTime timestamp = OffsetDateTime.parse("2021-12-07T14:30Z");
+        final List<ProcessFileDto> processFiles = new ArrayList<>();
+        processFiles.add(new ProcessFileDto(cgmFilePath, cgmFileType, ProcessFileStatus.VALIDATED, cgmFileName, "docId1", timestamp));
+        processFiles.add(new ProcessFileDto(cbcoraFilePath, cbcoraFileType, ProcessFileStatus.VALIDATED, cbcoraFileName, "docId2", timestamp));
+        processFiles.add(new ProcessFileDto(glskFilePath, glskFileType, ProcessFileStatus.VALIDATED, glskFileName, "docId3", timestamp));
+        processFiles.add(new ProcessFileDto(studyPointsFilePath, studyPointsFileType, ProcessFileStatus.VALIDATED, studyPointsFileName, "docId4", timestamp));
+        processFiles.add(new ProcessFileDto(refprogFilePath, refprogFileType, ProcessFileStatus.VALIDATED, refprogFileName, "docId5", timestamp));
+        final List<ProcessEventDto> processEvents = new ArrayList<>();
+        final List<ProcessRunDto> runHistory = new ArrayList<>();
+        runHistory.add(new ProcessRunDto(UUID.randomUUID(), OffsetDateTime.now(), processFiles));
+        return new TaskDto(id, timestamp, status, processFiles, null, Collections.emptyList(), processEvents, runHistory, Collections.emptyList());
     }
 
     @BeforeEach
@@ -116,8 +122,8 @@ class CoreValidAdapterListenerTest {
 
     @Test
     void testGetManualCoreValidRequest() {
-        TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.READY);
-        CoreValidRequest coreValidRequest = coreValidAdapterListener.getManualCoreValidRequest(taskDto);
+        final TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.READY);
+        final CoreValidRequest coreValidRequest = coreValidAdapterListener.getManualCoreValidRequest(taskDto);
         Assertions.assertEquals(taskDto.getId().toString(), coreValidRequest.getId());
         Assertions.assertEquals(cgmFileName, coreValidRequest.getCgm().getFilename());
         Assertions.assertEquals(cgmFileUrl, coreValidRequest.getCgm().getUrl());
@@ -125,94 +131,101 @@ class CoreValidAdapterListenerTest {
     }
 
     @Test
+    void testGetManualCoreValidRequestThrowsException() {
+        final TaskDto taskDto = new TaskDto(UUID.randomUUID(), OffsetDateTime.now(), TaskStatus.READY, List.of(), null, List.of(), List.of(), List.of(), List.of());
+
+        Assertions.assertThrows(
+                CoreValidAdapterException.class,
+                () -> coreValidAdapterListener.getManualCoreValidRequest(taskDto),
+                "Failed to handle manual run request on timestamp because it has no run history");
+    }
+
+    @Test
     void testGetAutomaticCoreValidRequest() {
-        TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.READY);
-        CoreValidRequest coreValidRequest = coreValidAdapterListener.getAutomaticCoreValidRequest(taskDto);
+        final TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.READY);
+        final CoreValidRequest coreValidRequest = coreValidAdapterListener.getAutomaticCoreValidRequest(taskDto);
         Assertions.assertTrue(coreValidRequest.getLaunchedAutomatically());
     }
 
     @Test
     void testGetCoreValidRequestWithIncorrectFiles() {
-        String wrongRefprogFileType = "REF-PROG";
-        UUID id = UUID.randomUUID();
-        OffsetDateTime timestamp = OffsetDateTime.parse("2021-12-07T14:30Z");
-        List<ProcessFileDto> processFiles = new ArrayList<>();
-        processFiles.add(new ProcessFileDto(cgmFilePath, cgmFileType, ProcessFileStatus.VALIDATED, cgmFileName, timestamp));
-        processFiles.add(new ProcessFileDto(cbcoraFilePath, cbcoraFileType, ProcessFileStatus.VALIDATED, cbcoraFileName, timestamp));
-        processFiles.add(new ProcessFileDto(glskFilePath, glskFileType, ProcessFileStatus.VALIDATED, glskFileName, timestamp));
-        processFiles.add(new ProcessFileDto(studyPointsFilePath, studyPointsFileType, ProcessFileStatus.VALIDATED, studyPointsFileName, timestamp));
-        processFiles.add(new ProcessFileDto(refprogFilePath, wrongRefprogFileType, ProcessFileStatus.VALIDATED, refprogFileName, timestamp));
-        List<ProcessEventDto> processEvents = new ArrayList<>();
-        TaskDto taskDto = new TaskDto(id, timestamp, TaskStatus.READY, processFiles, null, Collections.emptyList(), processEvents, Collections.emptyList(), Collections.emptyList());
+        final String wrongRefprogFileType = "REF-PROG";
+        final UUID id = UUID.randomUUID();
+        final OffsetDateTime timestamp = OffsetDateTime.parse("2021-12-07T14:30Z");
+        final List<ProcessFileDto> processFiles = new ArrayList<>();
+        processFiles.add(new ProcessFileDto(cgmFilePath, cgmFileType, ProcessFileStatus.VALIDATED, cgmFileName, "docId11", timestamp));
+        processFiles.add(new ProcessFileDto(cbcoraFilePath, cbcoraFileType, ProcessFileStatus.VALIDATED, cbcoraFileName, "docId12", timestamp));
+        processFiles.add(new ProcessFileDto(glskFilePath, glskFileType, ProcessFileStatus.VALIDATED, glskFileName, "docId13", timestamp));
+        processFiles.add(new ProcessFileDto(studyPointsFilePath, studyPointsFileType, ProcessFileStatus.VALIDATED, studyPointsFileName, "docId14", timestamp));
+        processFiles.add(new ProcessFileDto(refprogFilePath, wrongRefprogFileType, ProcessFileStatus.VALIDATED, refprogFileName, "docId15", timestamp));
+        final List<ProcessEventDto> processEvents = new ArrayList<>();
+        final TaskDto taskDto = new TaskDto(id, timestamp, TaskStatus.READY, processFiles, null, Collections.emptyList(), processEvents, Collections.emptyList(), Collections.emptyList());
         Assertions.assertThrows(IllegalStateException.class, () -> coreValidAdapterListener.getManualCoreValidRequest(taskDto));
 
     }
 
     @Test
     void consumeReadyAutoTask() {
-        TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.READY);
+        final TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.READY);
         coreValidAdapterListener.consumeAutoTask().accept(taskDto);
         Mockito.verify(coreValidClient).run(argumentCaptor.capture());
-        CoreValidRequest coreValidRequest = argumentCaptor.getValue();
+        final CoreValidRequest coreValidRequest = argumentCaptor.getValue();
         assert coreValidRequest.getLaunchedAutomatically();
     }
 
-    @Test
-    void consumeReadyTask() {
-        TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.READY);
+    @ParameterizedTest
+    @EnumSource(value = TaskStatus.class, names = {"READY", "SUCCESS", "ERROR"})
+    void consumeReadyTask(final TaskStatus taskStatus) {
+        final TaskDto taskDto = createTaskDtoWithStatus(taskStatus);
         coreValidAdapterListener.consumeTask().accept(taskDto);
         Mockito.verify(coreValidClient).run(argumentCaptor.capture());
-        CoreValidRequest coreValidRequest = argumentCaptor.getValue();
+        final CoreValidRequest coreValidRequest = argumentCaptor.getValue();
         Assertions.assertFalse(coreValidRequest.getLaunchedAutomatically());
-    }
-
-    @Test
-    void consumeSuccessAutoTask() {
-        TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.SUCCESS);
-        coreValidAdapterListener.consumeAutoTask().accept(taskDto);
-        Mockito.verify(coreValidClient).run(argumentCaptor.capture());
-        CoreValidRequest coreValidRequest = argumentCaptor.getValue();
-        assert coreValidRequest.getLaunchedAutomatically();
-    }
-
-    @Test
-    void consumeSuccessTask() {
-        TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.SUCCESS);
-        coreValidAdapterListener.consumeTask().accept(taskDto);
-        Mockito.verify(coreValidClient).run(argumentCaptor.capture());
-        CoreValidRequest coreValidRequest = argumentCaptor.getValue();
-        Assertions.assertFalse(coreValidRequest.getLaunchedAutomatically());
-    }
-
-    @Test
-    void consumeErrorAutoTask() {
-        TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.ERROR);
-        coreValidAdapterListener.consumeAutoTask().accept(taskDto);
-        Mockito.verify(coreValidClient).run(argumentCaptor.capture());
-        CoreValidRequest coreValidRequest = argumentCaptor.getValue();
-        assert coreValidRequest.getLaunchedAutomatically();
-    }
-
-    @Test
-    void consumeErrorTask() {
-        TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.ERROR);
-        coreValidAdapterListener.consumeTask().accept(taskDto);
-        Mockito.verify(coreValidClient).run(argumentCaptor.capture());
-        CoreValidRequest coreValidRequest = argumentCaptor.getValue();
-        Assertions.assertFalse(coreValidRequest.getLaunchedAutomatically());
-    }
-
-    @Test
-    void consumeCreatedAutoTask() {
-        TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.CREATED);
-        coreValidAdapterListener.consumeAutoTask().accept(taskDto);
-        Mockito.verify(coreValidClient, Mockito.never()).run(argumentCaptor.capture());
     }
 
     @Test
     void consumeCreatedTask() {
-        TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.CREATED);
+        final TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.CREATED);
         coreValidAdapterListener.consumeTask().accept(taskDto);
         Mockito.verify(coreValidClient, Mockito.never()).run(argumentCaptor.capture());
+    }
+
+    @Test
+    void consumeTaskThrowsException() {
+        final TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.READY);
+        Mockito.doThrow(RuntimeException.class).when(coreValidClient).run(Mockito.any());
+        final Consumer<TaskDto> taskDtoConsumer = coreValidAdapterListener.consumeTask();
+        Assertions.assertThrows(
+                CoreValidAdapterException.class,
+                () -> taskDtoConsumer.accept(taskDto),
+                "Error during handling manual run request on TS 2021-12-07T14:30Z");
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = TaskStatus.class, names = {"READY", "SUCCESS", "ERROR"})
+    void consumeSuccessAutoTask(final TaskStatus taskStatus) {
+        final TaskDto taskDto = createTaskDtoWithStatus(taskStatus);
+        coreValidAdapterListener.consumeAutoTask().accept(taskDto);
+        Mockito.verify(coreValidClient).run(argumentCaptor.capture());
+        final CoreValidRequest coreValidRequest = argumentCaptor.getValue();
+        assert coreValidRequest.getLaunchedAutomatically();
+    }
+
+    @Test
+    void consumeCreatedAutoTask() {
+        final TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.CREATED);
+        coreValidAdapterListener.consumeAutoTask().accept(taskDto);
+        Mockito.verify(coreValidClient, Mockito.never()).run(argumentCaptor.capture());
+    }
+
+    @Test
+    void consumeAutoTaskThrowsException() {
+        final TaskDto taskDto = createTaskDtoWithStatus(TaskStatus.READY);
+        Mockito.doThrow(RuntimeException.class).when(coreValidClient).run(Mockito.any());
+        final Consumer<TaskDto> taskDtoConsumer = coreValidAdapterListener.consumeAutoTask();
+        Assertions.assertThrows(
+                CoreValidAdapterException.class,
+                () -> taskDtoConsumer.accept(taskDto),
+                "Error during handling manual run request on TS 2021-12-07T14:30Z");
     }
 }
