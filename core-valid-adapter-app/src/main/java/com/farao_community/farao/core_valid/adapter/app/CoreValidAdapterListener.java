@@ -60,7 +60,7 @@ public class CoreValidAdapterListener {
                 LOGGER.warn("Failed to handle automatic run request on timestamp {} because it is not ready yet", taskDto.getTimestamp());
             }
         } catch (Exception e) {
-            throw new CoreValidAdapterException(String.format("Error during handling automatic run request %s on TS ", taskDto.getTimestamp()), e);
+            throw new CoreValidAdapterException(String.format("Error during handling automatic run request on TS %s", taskDto.getTimestamp()), e);
         }
     }
 
@@ -76,7 +76,7 @@ public class CoreValidAdapterListener {
                 LOGGER.warn("Failed to handle manual run request on timestamp {} because it is not ready yet", taskDto.getTimestamp());
             }
         } catch (Exception e) {
-            throw new CoreValidAdapterException(String.format("Error during handling manual run request %s on TS ", taskDto.getTimestamp()), e);
+            throw new CoreValidAdapterException(String.format("Error during handling manual run request on TS %s", taskDto.getTimestamp()), e);
         }
 
     }
@@ -102,23 +102,12 @@ public class CoreValidAdapterListener {
             String fileType = processFileDto.getFileType();
             String fileUrl = minioAdapter.generatePreSignedUrlFromFullMinioPath(processFileDto.getFilePath(), 1);
             switch (fileType) {
-                case "CGM":
-                    cgm = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
-                    break;
-                case "CBCORA":
-                    cbcora = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
-                    break;
-                case "GLSK":
-                    glsk = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
-                    break;
-                case "REFPROG":
-                    refprog = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
-                    break;
-                case "STUDY-POINTS":
-                    studyPoints = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
-                    break;
-                default:
-                    throw new IllegalStateException("Unexpected value: " + processFileDto.getFileType());
+                case "CGM" -> cgm = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
+                case "CBCORA" -> cbcora = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
+                case "GLSK" -> glsk = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
+                case "REFPROG" -> refprog = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
+                case "STUDY-POINTS" -> studyPoints = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
+                default -> throw new IllegalStateException("Unexpected value: " + processFileDto.getFileType());
             }
         }
         return new CoreValidRequest(
