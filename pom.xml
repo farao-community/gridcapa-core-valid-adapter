@@ -37,7 +37,7 @@
 
 	<properties>
 		<!-- BUSINESS DEPENDENCIES -->
-		<core-valid-runner.version>1.21.0</core-valid-runner.version>
+		<core-valid-runner.version>1.22.0</core-valid-runner.version>
 		<task-manager.version>1.35.0</task-manager.version>
 		<gridcapa.starter.minio.adapter.version>1.5.0</gridcapa.starter.minio.adapter.version>
 	</properties>
