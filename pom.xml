@@ -26,6 +26,14 @@
 	<modules>
 		<module>core-valid-adapter-app</module>
 	</modules>
+
+	<properties>
+		<!-- BUSINESS DEPENDENCIES -->
+		<core-valid-runner.version>1.22.0</core-valid-runner.version>
+		<task-manager.version>1.36.0</task-manager.version>
+		<gridcapa.starter.minio.adapter.version>1.6.0</gridcapa.starter.minio.adapter.version>
+	</properties>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -34,13 +42,6 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<properties>
-		<!-- BUSINESS DEPENDENCIES -->
-		<core-valid-runner.version>1.22.0</core-valid-runner.version>
-		<task-manager.version>1.36.0</task-manager.version>
-		<gridcapa.starter.minio.adapter.version>1.6.0</gridcapa.starter.minio.adapter.version>
-	</properties>
 
 	<dependencyManagement>
 		<dependencies>
