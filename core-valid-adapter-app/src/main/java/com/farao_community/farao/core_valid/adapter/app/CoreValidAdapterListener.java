@@ -120,7 +120,7 @@ public class CoreValidAdapterListener {
         }
         return new CoreValidRequest(
                 id,
-                getCurrentRunId(taskDto),
+                getCurrentRunId(taskDto, isLaunchedAutomatically),
                 offsetDateTime,
                 cgm,
                 cbcora,
@@ -131,11 +131,15 @@ public class CoreValidAdapterListener {
         );
     }
 
-    private String getCurrentRunId(final TaskDto taskDto) {
-        List<ProcessRunDto> runHistory = taskDto.getRunHistory();
+    private String getCurrentRunId(final TaskDto taskDto,
+                                   final boolean isLaunchedAutomatically) {
+        final List<ProcessRunDto> runHistory = taskDto.getRunHistory();
         if (runHistory == null || runHistory.isEmpty()) {
-            LOGGER.warn("Failed to handle manual run request on timestamp {} because it has no run history", taskDto.getTimestamp());
-            throw new CoreValidAdapterException("Failed to handle manual run request on timestamp because it has no run history");
+            LOGGER.warn("Failed to handle {} run request on timestamp {} because it has no run history",
+                        isLaunchedAutomatically ? "automatic" : "manual",
+                        taskDto.getTimestamp());
+            throw new CoreValidAdapterException("Failed to handle %s run request on timestamp because it has no run history"
+                                                        .formatted(isLaunchedAutomatically ? "automatic" : "manual"));
         }
         runHistory.sort((o1, o2) -> o2.getExecutionDate().compareTo(o1.getExecutionDate()));
         return runHistory.getFirst().getId().toString();
