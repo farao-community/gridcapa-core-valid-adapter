@@ -5,11 +5,11 @@ package com.farao_community.farao.core_valid.adapter.app;
  */
 public class CoreValidAdapterException extends RuntimeException {
 
-    public CoreValidAdapterException(String message, Throwable throwable) {
+    public CoreValidAdapterException(final String message, final Throwable throwable) {
         super(message, throwable);
     }
 
-    public CoreValidAdapterException(String message) {
+    public CoreValidAdapterException(final String message) {
         super(message);
     }
 }
