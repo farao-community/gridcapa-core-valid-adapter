@@ -22,6 +22,11 @@ import org.springframework.stereotype.Component;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
+
+import static com.farao_community.farao.gridcapa.task_manager.api.TaskStatus.ERROR;
+import static com.farao_community.farao.gridcapa.task_manager.api.TaskStatus.READY;
+import static com.farao_community.farao.gridcapa.task_manager.api.TaskStatus.SUCCESS;
 
 /**
  * @author Alexandre Montigny {@literal <alexandre.montigny at rte-france.com>}
@@ -33,7 +38,7 @@ public class CoreValidAdapterListener {
     private final CoreValidClient coreValidClient;
     private final MinioAdapter minioAdapter;
 
-    public CoreValidAdapterListener(CoreValidClient coreValidClient, MinioAdapter minioAdapter) {
+    public CoreValidAdapterListener(final CoreValidClient coreValidClient, final MinioAdapter minioAdapter) {
         this.coreValidClient = coreValidClient;
         this.minioAdapter = minioAdapter;
     }
@@ -48,71 +53,74 @@ public class CoreValidAdapterListener {
         return this::handleAutoTask;
     }
 
-    private void handleAutoTask(TaskDto taskDto) {
-        try {
-            if (taskDto.getStatus() == TaskStatus.READY
-                    || taskDto.getStatus() == TaskStatus.SUCCESS
-                    || taskDto.getStatus() == TaskStatus.ERROR) {
-                LOGGER.info("Handling automatic run request on TS {} ", taskDto.getTimestamp());
-                CoreValidRequest request = getAutomaticCoreValidRequest(taskDto);
-                coreValidClient.run(request);
-            } else {
-                LOGGER.warn("Failed to handle automatic run request on timestamp {} because it is not ready yet", taskDto.getTimestamp());
-            }
-        } catch (Exception e) {
-            throw new CoreValidAdapterException(String.format("Error during handling automatic run request on TS %s", taskDto.getTimestamp()), e);
-        }
+    private void handleAutoTask(final TaskDto taskDto) {
+        handleTask(taskDto, this::getAutomaticCoreValidRequest, "automatic");
     }
 
-    private void handleManualTask(TaskDto taskDto) {
+    private void handleManualTask(final TaskDto taskDto) {
+        handleTask(taskDto, this::getManualCoreValidRequest, "manual");
+    }
+
+    private void handleTask(final TaskDto taskDto,
+                            final Function<TaskDto, CoreValidRequest> coreValidReqMapper,
+                            final String launchType) {
         try {
-            if (taskDto.getStatus() == TaskStatus.READY
-                    || taskDto.getStatus() == TaskStatus.SUCCESS
-                    || taskDto.getStatus() == TaskStatus.ERROR) {
-                LOGGER.info("Handling manual run request on TS {} ", taskDto.getTimestamp());
-                CoreValidRequest request = getManualCoreValidRequest(taskDto);
+            if (isReadyOrFinished(taskDto)) {
+                LOGGER.info("Handling {} run request on TS {} ", launchType, taskDto.getTimestamp());
+                final CoreValidRequest request = coreValidReqMapper.apply(taskDto);
                 coreValidClient.run(request);
             } else {
-                LOGGER.warn("Failed to handle manual run request on timestamp {} because it is not ready yet", taskDto.getTimestamp());
+                LOGGER.warn("Failed to handle {} run request on timestamp {} because it is not ready yet",
+                            launchType,
+                            taskDto.getTimestamp());
             }
-        } catch (Exception e) {
-            throw new CoreValidAdapterException(String.format("Error during handling manual run request on TS %s", taskDto.getTimestamp()), e);
+        } catch (final Exception e) {
+            throw new CoreValidAdapterException(String.format("Error during handling of %s run request on TS %s",
+                                                              launchType, taskDto.getTimestamp()), e);
         }
 
     }
 
-    CoreValidRequest getManualCoreValidRequest(TaskDto taskDto) {
+    private static boolean isReadyOrFinished(final TaskDto taskDto) {
+        final TaskStatus status = taskDto.getStatus();
+        return status == READY || status == SUCCESS || status == ERROR;
+    }
+
+    CoreValidRequest getManualCoreValidRequest(final TaskDto taskDto) {
         return getCoreValidRequest(taskDto, false);
     }
 
-    CoreValidRequest getAutomaticCoreValidRequest(TaskDto taskDto) {
+    CoreValidRequest getAutomaticCoreValidRequest(final TaskDto taskDto) {
         return getCoreValidRequest(taskDto, true);
     }
 
-    CoreValidRequest getCoreValidRequest(TaskDto taskDto, boolean isLaunchedAutomatically) {
-        String id = taskDto.getId().toString();
-        OffsetDateTime offsetDateTime = taskDto.getTimestamp();
-        List<ProcessFileDto> processFiles = taskDto.getInputs();
+    CoreValidRequest getCoreValidRequest(final TaskDto taskDto,
+                                         final boolean isLaunchedAutomatically) {
+        final String id = taskDto.getId().toString();
+        final OffsetDateTime offsetDateTime = taskDto.getTimestamp();
+        final List<ProcessFileDto> processFiles = taskDto.getInputs();
         CoreValidFileResource cgm = null;
         CoreValidFileResource cbcora = null;
         CoreValidFileResource glsk = null;
         CoreValidFileResource refprog = null;
         CoreValidFileResource studyPoints = null;
-        for (ProcessFileDto processFileDto : processFiles) {
-            String fileType = processFileDto.getFileType();
-            String fileUrl = minioAdapter.generatePreSignedUrlFromFullMinioPath(processFileDto.getFilePath(), 1);
+        for (final ProcessFileDto processFileDto : processFiles) {
+            final String fileType = processFileDto.getFileType();
+            final String fileUrl = minioAdapter.generatePreSignedUrlFromFullMinioPath(processFileDto.getFilePath(), 1);
+            final String fileName = processFileDto.getFilename();
+
             switch (fileType) {
-                case "CGM" -> cgm = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
-                case "CBCORA" -> cbcora = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
-                case "GLSK" -> glsk = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
-                case "REFPROG" -> refprog = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
-                case "STUDY-POINTS" -> studyPoints = new CoreValidFileResource(processFileDto.getFilename(), fileUrl);
-                default -> throw new IllegalStateException("Unexpected value: " + processFileDto.getFileType());
+                case "CGM" -> cgm = new CoreValidFileResource(fileName, fileUrl);
+                case "CBCORA" -> cbcora = new CoreValidFileResource(fileName, fileUrl);
+                case "GLSK" -> glsk = new CoreValidFileResource(fileName, fileUrl);
+                case "REFPROG" -> refprog = new CoreValidFileResource(fileName, fileUrl);
+                case "STUDY-POINTS" -> studyPoints = new CoreValidFileResource(fileName, fileUrl);
+                default -> throw new IllegalStateException("Unexpected value: " + fileType);
             }
         }
         return new CoreValidRequest(
                 id,
-                getCurrentRunId(taskDto),
+                getCurrentRunId(taskDto, isLaunchedAutomatically),
                 offsetDateTime,
                 cgm,
                 cbcora,
@@ -123,13 +131,17 @@ public class CoreValidAdapterListener {
         );
     }
 
-    private String getCurrentRunId(TaskDto taskDto) {
-        List<ProcessRunDto> runHistory = taskDto.getRunHistory();
+    private String getCurrentRunId(final TaskDto taskDto,
+                                   final boolean isLaunchedAutomatically) {
+        final List<ProcessRunDto> runHistory = taskDto.getRunHistory();
         if (runHistory == null || runHistory.isEmpty()) {
-            LOGGER.warn("Failed to handle manual run request on timestamp {} because it has no run history", taskDto.getTimestamp());
-            throw new CoreValidAdapterException("Failed to handle manual run request on timestamp because it has no run history");
+            LOGGER.warn("Failed to handle {} run request on timestamp {} because it has no run history",
+                        isLaunchedAutomatically ? "automatic" : "manual",
+                        taskDto.getTimestamp());
+            throw new CoreValidAdapterException("Failed to handle %s run request on timestamp because it has no run history"
+                                                        .formatted(isLaunchedAutomatically ? "automatic" : "manual"));
         }
         runHistory.sort((o1, o2) -> o2.getExecutionDate().compareTo(o1.getExecutionDate()));
-        return runHistory.get(0).getId().toString();
+        return runHistory.getFirst().getId().toString();
     }
 }
