@@ -31,7 +31,7 @@
 		<argLine /> <!-- required for java agent declaration, do not remove -->
 		<!-- BUSINESS DEPENDENCIES -->
 		<core-valid-runner.version>1.22.0</core-valid-runner.version>
-		<task-manager.version>1.36.0</task-manager.version>
+		<task-manager.version>1.38.0</task-manager.version>
 		<gridcapa.starter.minio.adapter.version>1.6.0</gridcapa.starter.minio.adapter.version>
 	</properties>
 
